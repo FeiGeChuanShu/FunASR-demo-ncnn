@@ -1,0 +1,29 @@
+7767517
+27 32
+Input                    in0                      0 1 in0
+Input                    in1                      0 1 in1
+Reshape                  /feature_extractor/Reshape 1 1 in0 /feature_extractor/Reshape_output_0 0=-1 1=1 2=1
+Split                    splitncnn_input1         1 2 in1 state.1_splitncnn_0 state.1_splitncnn_1
+Padding                  /stft/padding/Pad        1 1 /feature_extractor/Reshape_output_0 /stft/padding/Pad_output_0 3=64 4=2
+Squeeze                  /Squeeze                 1 1 /stft/padding/Pad_output_0 /Squeeze_output_0 -23303=1,0
+Crop                     /decoder/Gather_1        1 1 state.1_splitncnn_1 /decoder/Gather_1_output_0 -23309=1,0 -23310=1,1 -23311=1,0
+Crop                     /decoder/Gather_2        1 1 state.1_splitncnn_0 /decoder/Gather_2_output_0 -23309=1,1 -23310=1,2 -23311=1,0
+Convolution1D            /stft/Conv               1 1 /Squeeze_output_0 /stft/Conv_output_0 0=258 1=256 3=128 6=66048
+Split                    splitncnn_0              1 2 /stft/Conv_output_0 /stft/Conv_output_0_splitncnn_0 /stft/Conv_output_0_splitncnn_1
+Crop                     Slice3                   1 1 /stft/Conv_output_0_splitncnn_1 _v_103 -23309=1,0 -23310=1,129 -23311=1,0
+Crop                     Slice4                   1 1 /stft/Conv_output_0_splitncnn_0 _v_108 -23309=1,129 -23310=1,2147483647 -23311=1,0
+UnaryOp                  /stft/Pow                1 1 _v_103 /stft/Pow_output_0 0=4
+UnaryOp                  /stft/Pow_1              1 1 _v_108 /stft/Pow_1_output_0 0=4
+BinaryOp                 /stft/Add                2 1 /stft/Pow_output_0 /stft/Pow_1_output_0 /stft/Add_output_0
+UnaryOp                  /stft/Sqrt               1 1 /stft/Add_output_0 /stft/Sqrt_output_0 0=5
+Convolution1D            /encoder/0/reparam_conv/Conv 1 1 /stft/Sqrt_output_0 /encoder/0/activation/Relu_output_0 0=128 1=3 4=1 5=1 6=49536 9=1
+Convolution1D            /encoder/1/reparam_conv/Conv 1 1 /encoder/0/activation/Relu_output_0 /encoder/1/activation/Relu_output_0 0=64 1=3 3=2 4=1 5=1 6=24576 9=1
+Convolution1D            /encoder/2/reparam_conv/Conv 1 1 /encoder/1/activation/Relu_output_0 /encoder/2/activation/Relu_output_0 0=64 1=3 3=2 4=1 5=1 6=12288 9=1
+Convolution1D            /encoder/3/reparam_conv/Conv 1 1 /encoder/2/activation/Relu_output_0 /encoder/3/activation/Relu_output_0 0=128 1=3 4=1 5=1 6=24576 9=1
+Permute                  /encoder/3/Transpose     1 1 /encoder/3/activation/Relu_output_0 /decoder/Transpose_output_0 0=1
+LSTM                     /decoder/LSTM            3 3 /decoder/Transpose_output_0 /decoder/Gather_1_output_0 /decoder/Gather_2_output_0 /decoder/LSTM_output_0 /decoder/LSTM_output_1 /decoder/LSTM_output_2 0=128 1=65536 3=128
+Split                    /splitncnn_1             1 2 /decoder/LSTM_output_1 /decoder/LSTM_output_1_splitncnn_0 /decoder/LSTM_output_1_splitncnn_1
+Concat                   /decoder/Concat          2 1 /decoder/LSTM_output_1_splitncnn_1 /decoder/LSTM_output_2 out0
+Permute                  /decoder/Transpose_1     1 1 /decoder/LSTM_output_1_splitncnn_0 /decoder/Transpose_1_output_0 0=1
+ReLU                     /decoder/decoder/1/Relu  1 1 /decoder/Transpose_1_output_0 /decoder/decoder/1/Relu_output_0
+Convolution1D            /decoder/decoder/2/Conv  1 1 /decoder/decoder/1/Relu_output_0 out1 0=1 1=1 5=1 6=128 9=4

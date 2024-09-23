@@ -1,0 +1,69 @@
+7767517
+67 82
+Input                    /x.1                     0 1 /x.1
+Input                    /h.1                     0 1 /h.1
+Input                    /c.1                     0 1 /c.1
+Reshape                  /feature_extractor/Reshape 1 1 /x.1 /feature_extractor/Reshape_output_0 0=-1 1=1 2=1
+Slice                    /decoder/Slice           1 2 /h.1 /h_slice0 /h_slice1 -23300=2,-233,-233
+Slice                    /decoder/Slice_1         1 2 /c.1 /c_slice0 /c_slice1 -23300=2,-233,-233
+Padding                  /feature_extractor/Pad   1 1 /feature_extractor/Reshape_output_0 /feature_extractor/Pad_output_0 2=96 3=96 4=2
+Squeeze                  /Squeeze                 1 1 /feature_extractor/Pad_output_0 /Squeeze_output_0 -23303=1,0
+Convolution1D            /feature_extractor/Conv  1 1 /Squeeze_output_0 /feature_extractor/Conv_output_0 0=258 1=256 3=64 6=66048
+Split                    /splitncnn_0             1 2 /feature_extractor/Conv_output_0 /feature_extractor/Conv_output_0_splitncnn_0 /feature_extractor/Conv_output_0_splitncnn_1
+Crop                     /Slice5                  1 1 /feature_extractor/Conv_output_0_splitncnn_1 /_v_169 -23309=1,0 -23310=1,129 -23311=1,0
+Crop                     /Slice6                  1 1 /feature_extractor/Conv_output_0_splitncnn_0 /_v_174 -23309=1,129 -23310=1,2147483647 -23311=1,0
+UnaryOp                  /feature_extractor/Pow   1 1 /_v_169 /feature_extractor/Pow_output_0 0=4
+UnaryOp                  /feature_extractor/Pow_1 1 1 /_v_174 /feature_extractor/Pow_1_output_0 0=4
+BinaryOp                 /feature_extractor/Add   2 1 /feature_extractor/Pow_output_0 /feature_extractor/Pow_1_output_0 /feature_extractor/Add_output_0
+UnaryOp                  /feature_extractor/Sqrt  1 1 /feature_extractor/Add_output_0 /feature_extractor/Sqrt_output_0 0=5
+Split                    /splitncnn_1             1 2 /feature_extractor/Sqrt_output_0 /feature_extractor/Sqrt_output_0_splitncnn_0 /feature_extractor/Sqrt_output_0_splitncnn_1
+BinaryOp                 /adaptive_normalization/Mul 1 1 /feature_extractor/Sqrt_output_0_splitncnn_1 /adaptive_normalization/Mul_output_0 0=2 1=1 2=1.048576e+06
+BinaryOp                 /adaptive_normalization/Add 1 1 /adaptive_normalization/Mul_output_0 /adaptive_normalization/Add_output_0 1=1 2=1.000000e+00
+UnaryOp                  /adaptive_normalization/Log 1 1 /adaptive_normalization/Add_output_0 /adaptive_normalization/Log_output_0 0=8
+Split                    /splitncnn_2             1 2 /adaptive_normalization/Log_output_0 /adaptive_normalization/Log_output_0_splitncnn_0 /adaptive_normalization/Log_output_0_splitncnn_1
+Reduction                /adaptive_normalization/ReduceMean 1 1 /adaptive_normalization/Log_output_0_splitncnn_1 /adaptive_normalization/ReduceMean_output_0 0=3 1=0 -23303=1,0 4=1 5=1
+Split                    /splitncnn_3             1 3 /adaptive_normalization/ReduceMean_output_0 /adaptive_normalization/ReduceMean_output_0_splitncnn_0 /adaptive_normalization/ReduceMean_output_0_splitncnn_1 /adaptive_normalization/ReduceMean_output_0_splitncnn_2
+Crop                     /Slice15                 1 1 /adaptive_normalization/ReduceMean_output_0_splitncnn_2 /_v_176 -23309=1,1 -23310=1,8 -23311=1,1
+Crop                     /Slice17                 1 1 /adaptive_normalization/ReduceMean_output_0_splitncnn_1 /_v_181 -23309=1,-8 -23310=1,-1 -23311=1,1
+Concat                   /adaptive_normalization/Concat 3 1 /_v_176 /adaptive_normalization/ReduceMean_output_0_splitncnn_0 /_v_181 /adaptive_normalization/Concat_output_0 0=1
+Convolution1D            /adaptive_normalization/Conv 1 1 /adaptive_normalization/Concat_output_0 /adaptive_normalization/Conv_output_0 0=1 1=7 6=7
+Reduction                /adaptive_normalization/ReduceMean_1 1 1 /adaptive_normalization/Conv_output_0 /adaptive_normalization/ReduceMean_1_output_0 0=3 1=0 -23303=1,-1 4=1 5=1
+UnaryOp                  /adaptive_normalization/Neg 1 1 /adaptive_normalization/ReduceMean_1_output_0 /adaptive_normalization/Neg_output_0 0=1
+BinaryOp                 /adaptive_normalization/Add_1 2 1 /adaptive_normalization/Log_output_0_splitncnn_0 /adaptive_normalization/Neg_output_0 /adaptive_normalization/Add_1_output_0
+Concat                   /Concat                  2 1 /feature_extractor/Sqrt_output_0_splitncnn_0 /adaptive_normalization/Add_1_output_0 /Concat_output_0
+Split                    /splitncnn_4             1 2 /Concat_output_0 /Concat_output_0_splitncnn_0 /Concat_output_0_splitncnn_1
+ConvolutionDepthWise1D            /first_layer/0/dw_conv/0/Conv 1 1 /Concat_output_0_splitncnn_1 /first_layer/0/dw_conv/2/Relu_output_0 0=258 1=5 4=2 5=1 6=1290 7=258 9=1
+Convolution1D            /first_layer/0/proj/Conv 1 1 /Concat_output_0_splitncnn_0 /first_layer/0/proj/Conv_output_0 0=16 1=1 5=1 6=4128
+Convolution1D            /first_layer/0/pw_conv/0/Conv 1 1 /first_layer/0/dw_conv/2/Relu_output_0 /first_layer/0/pw_conv/0/Conv_output_0 0=16 1=1 5=1 6=4128
+BinaryOp                 /first_layer/0/Add       2 1 /first_layer/0/pw_conv/0/Conv_output_0 /first_layer/0/proj/Conv_output_0 /first_layer/0/Add_output_0
+ReLU                     /first_layer/0/activation/Relu 1 1 /first_layer/0/Add_output_0 /first_layer/0/activation/Relu_output_0
+Convolution1D            /encoder/0/Conv          1 1 /first_layer/0/activation/Relu_output_0 /encoder/2/Relu_output_0 0=16 1=1 3=2 5=1 6=256 9=1
+Split                    /splitncnn_5             1 2 /encoder/2/Relu_output_0 /encoder/2/Relu_output_0_splitncnn_0 /encoder/2/Relu_output_0_splitncnn_1
+ConvolutionDepthWise1D            /encoder/3/0/dw_conv/0/Conv 1 1 /encoder/2/Relu_output_0_splitncnn_1 /encoder/3/0/dw_conv/2/Relu_output_0 0=16 1=5 4=2 5=1 6=80 7=16 9=1
+Convolution1D            /encoder/3/0/proj/Conv   1 1 /encoder/2/Relu_output_0_splitncnn_0 /encoder/3/0/proj/Conv_output_0 0=32 1=1 5=1 6=512
+Convolution1D            /encoder/3/0/pw_conv/0/Conv 1 1 /encoder/3/0/dw_conv/2/Relu_output_0 /encoder/3/0/pw_conv/0/Conv_output_0 0=32 1=1 5=1 6=512
+BinaryOp                 /encoder/3/0/Add         2 1 /encoder/3/0/pw_conv/0/Conv_output_0 /encoder/3/0/proj/Conv_output_0 /encoder/3/0/Add_output_0
+ReLU                     /encoder/3/0/activation/Relu 1 1 /encoder/3/0/Add_output_0 /encoder/3/0/activation/Relu_output_0
+Convolution1D            /encoder/4/Conv          1 1 /encoder/3/0/activation/Relu_output_0 /encoder/6/Relu_output_0 0=32 1=1 3=2 5=1 6=1024 9=1
+Split                    /splitncnn_6             1 2 /encoder/6/Relu_output_0 /encoder/6/Relu_output_0_splitncnn_0 /encoder/6/Relu_output_0_splitncnn_1
+ConvolutionDepthWise1D            /encoder/7/0/dw_conv/0/Conv 1 1 /encoder/6/Relu_output_0_splitncnn_1 /encoder/7/0/dw_conv/2/Relu_output_0 0=32 1=5 4=2 5=1 6=160 7=32 9=1
+Convolution1D            /encoder/7/0/pw_conv/0/Conv 1 1 /encoder/7/0/dw_conv/2/Relu_output_0 /encoder/7/0/pw_conv/0/Conv_output_0 0=32 1=1 5=1 6=1024
+BinaryOp                 /encoder/7/0/Add         2 1 /encoder/7/0/pw_conv/0/Conv_output_0 /encoder/6/Relu_output_0_splitncnn_0 /encoder/7/0/Add_output_0
+ReLU                     /encoder/7/0/activation/Relu 1 1 /encoder/7/0/Add_output_0 /encoder/7/0/activation/Relu_output_0
+Convolution1D            /encoder/8/Conv          1 1 /encoder/7/0/activation/Relu_output_0 /encoder/10/Relu_output_0 0=32 1=1 3=2 5=1 6=1024 9=1
+Split                    /splitncnn_7             1 2 /encoder/10/Relu_output_0 /encoder/10/Relu_output_0_splitncnn_0 /encoder/10/Relu_output_0_splitncnn_1
+ConvolutionDepthWise1D            /encoder/11/0/dw_conv/Conv 1 1 /encoder/10/Relu_output_0_splitncnn_1 /encoder/11/0/dw_conv/Relu_output_0 0=32 1=5 4=2 5=1 6=160 7=32 9=1
+Convolution1D            /encoder/11/0/proj/Conv  1 1 /encoder/10/Relu_output_0_splitncnn_0 /encoder/11/0/proj/Conv_output_0 0=64 1=1 5=1 6=2048
+Convolution1D            /encoder/11/0/pw_conv/0/Conv 1 1 /encoder/11/0/dw_conv/Relu_output_0 /encoder/11/0/pw_conv/0/Conv_output_0 0=64 1=1 5=1 6=2048
+BinaryOp                 /encoder/11/0/Add        2 1 /encoder/11/0/pw_conv/0/Conv_output_0 /encoder/11/0/proj/Conv_output_0 /encoder/11/0/Add_output_0
+ReLU                     /encoder/11/0/activation/Relu 1 1 /encoder/11/0/Add_output_0 /encoder/11/0/activation/Relu_output_0
+Convolution1D            /encoder/12/Conv         1 1 /encoder/11/0/activation/Relu_output_0 /encoder/14/Relu_output_0 0=64 1=1 5=1 6=4096 9=1
+Permute                  /decoder/Transpose       1 1 /encoder/14/Relu_output_0 /decoder/Transpose_output_0 0=1
+LSTM                     /decoder/LSTM            3 3 /decoder/Transpose_output_0 /h_slice0 /c_slice0 /decoder/LSTM_output_0 /decoder/LSTM_output_1 /decoder/LSTM_output_2 0=64 1=16384 3=64
+LSTM                     /decoder/LSTM_1          3 3 /decoder/LSTM_output_0 /h_slice1 /c_slice1 /decoder/LSTM_1_output_0 /decoder/LSTM_1_output_1 /decoder/LSTM_1_output_2 0=64 1=16384 3=64
+Concat                   /decoder/Concat          2 1 /decoder/LSTM_output_1 /decoder/LSTM_1_output_1 /h0
+Concat                   /decoder/Concat_1        2 1 /decoder/LSTM_output_2 /decoder/LSTM_1_output_2 /c0
+Permute                  /decoder/Transpose_1     1 1 /decoder/LSTM_1_output_0 /decoder/Transpose_1_output_0 0=1
+ReLU                     /decoder/decoder/0/Relu  1 1 /decoder/Transpose_1_output_0 /decoder/decoder/0/Relu_output_0
+Convolution1D            /decoder/decoder/1/Conv  1 1 /decoder/decoder/0/Relu_output_0 /decoder/decoder/2/Sigmoid_output_0 0=1 1=1 5=1 6=64 9=4
+Reduction                /decoder/decoder/2/mean_0 1 1 /decoder/decoder/2/Sigmoid_output_0 out 0=3 1=0 -23303=1,-1 5=1
